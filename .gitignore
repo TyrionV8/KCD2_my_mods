@@ -1,0 +1,7 @@
+# Arquivos de execução e dados pessoais não pertencem ao repositório.
+__pycache__/
+*.pyc
+*.log
+*.whs
+*.vdf
+*.partial

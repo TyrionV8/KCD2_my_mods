@@ -1,0 +1,11 @@
+<kcd_mod>
+  <info>
+    <name>Instant Prepare</name>
+    <description>Prepare brews one highest-quality potion immediately.</description>
+    <author>Codex</author>
+    <version>0.1.0</version>
+    <modid>instant_prepare</modid>
+    <modifies_level>false</modifies_level>
+    <created_on>2026-09-28</created_on>
+  </info>
+</kcd_mod>
