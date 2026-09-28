@@ -4,6 +4,8 @@
 *Kingdom Come: Deliverance II*, edição Steam, montagem 15693, no Linux com
 Proton. A publicação nas plataformas ainda **não foi feita**. Antes de seguir
 uma interface que possa ter mudado, confira os links oficiais ao fim deste guia.
+O pacote atual inclui a correção 0.1.5 para produtos não divisíveis. A receita
+13 criou 5 poções no teste dentro do jogo.
 
 ## O que está pronto para distribuir
 
@@ -18,8 +20,9 @@ Na pasta `/home/davi/repos/KCD2_my_mods/mods/instant-prepare/dist/`:
 `.asi` é uma extensão binária do Windows; `dinput8.dll` é a biblioteca dinâmica
 que a carrega. Esse pacote deve ser extraído na **raiz do jogo**, onde estão as
 pastas `Bin` e `Data`. Ele **não** pertence à pasta `Mods` e ainda não foi testado
-em Windows. O código cobre 31 receitas da montagem indicada, mas só a receita 2
-teve teste dentro do jogo confirmado pelo usuário. Essas restrições devem estar
+em Windows. O código cobre 31 receitas da montagem indicada. O usuário confirmou
+o resultado das receitas 2 e 13 pelo registro e relatou funcionamento das outras
+receitas originais testadas. Essas restrições devem estar
 visíveis na página pública.
 
 Antes de abrir qualquer página de publicação, confira o pacote sem alterá-lo.
@@ -54,7 +57,7 @@ com inteligência artificial.
 1. Entre na sua conta Nexus Mods e, na página do jogo, use a opção de adicionar
    um mod. O nome exato do botão pode mudar com a interface.
 2. Use um título claro, por exemplo **Instant Prepare — One-Click Best Quality
-   Alchemy (Steam build 15693)**. Versão testada para a receita 2: `0.1.4`. Categoria sugerida:
+   Alchemy (Steam build 15693)**. Versão testada: `0.1.5`. Categoria sugerida:
    jogabilidade ou alquimia, conforme as opções disponíveis.
 3. Envie `InstantPrepare-15693-mod.zip` como **arquivo principal**. Se desejar,
    envie `InstantPrepare-15693-source.zip` como arquivo adicional de código.
@@ -62,7 +65,8 @@ com inteligência artificial.
    poções de qualidade 4 diretamente, conforme o rendimento da receita e o
    bônus ativo do personagem; há 31 receitas mapeadas; as versões 0.1.1 a 0.1.3
    ainda produziam apenas 3 com Secrets of Matter II, e a versão 0.1.4 produziu
-   5 em duas tentativas da receita 2;
+   5 em duas tentativas da receita 2; a versão 0.1.5 corrigiu a criação da
+   receita 13, que também produziu 5 unidades;
    instalação manual na raiz; `dinput8.dll` não deve
    substituir um carregador já existente sem análise; no Proton é preciso
    `WINEDLLOVERRIDES="dinput8=n,b" %command%`; Windows ainda não foi testado.

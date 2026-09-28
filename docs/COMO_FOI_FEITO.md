@@ -11,8 +11,10 @@ Recipe 2: created one quality-4 potion
 ```
 
 O usuário confirmou que, ao usar **Prepare**, a poção apareceu diretamente e os
-ingredientes não foram separados na mesa. Isso valida esse cenário; as outras
-30 receitas ainda merecem testes próprios.
+ingredientes não foram separados na mesa. Testes posteriores confirmaram o
+rendimento de 5 unidades na receita 2 e, após correção dos itens não divisíveis,
+na receita 13. O usuário também relatou funcionamento das outras receitas
+originais testadas; receitas adicionadas por mods permanecem no preparo manual.
 
 ## 1. Traduzir o pedido em uma sequência verificável
 
@@ -21,7 +23,7 @@ O comportamento desejado foi dividido em etapas:
 1. Descobrir qual receita está aberta no livro da mesa de alquimia.
 2. Ler a lista e as quantidades de ingredientes dessa receita.
 3. Conferir no inventário se há ingredientes suficientes, inclusive ervas secas.
-4. Descontar os ingredientes e adicionar uma poção da melhor qualidade.
+4. Descontar os ingredientes e adicionar a quantidade correta de poções da melhor qualidade.
 5. Impedir que a ação original espalhe os ingredientes na mesa.
 6. Manter a ação original se a receita não for conhecida ou faltarem ingredientes.
 
@@ -162,6 +164,14 @@ Essa versão compilou e passou nos testes simulados de quantidade e inventário.
 No teste dentro do jogo, a receita 2 criou 5 poções de qualidade 4 duas vezes;
 o registro mostrou `native yield bonus 2` nas duas produções. Isso confirma
 essa leitura nativa para o talento **Secrets of Matter II** no save testado.
+
+O teste posterior de outras receitas revelou falha na receita 13, **Saviour
+Schnapps**. A tabela `item__alchemy.xml` marca esse produto como não divisível.
+A versão 0.1.5 consulta esse atributo ao gerar a tabela e cria cada unidade de
+produtos não divisíveis separadamente. A rotina também registra a etapa da
+falha para facilitar o diagnóstico caso a mudança não resolva o problema.
+Essa alteração passou na simulação de inventário. No teste dentro do jogo, a
+receita 13 criou 5 poções de qualidade 4 com bônus nativo 2.
 
 ## 6. Compilar uma extensão Windows no Linux
 

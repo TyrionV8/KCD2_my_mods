@@ -10,8 +10,12 @@ também entregou 3, apesar do talento aparecer na tela do personagem. A versão
 0.1.4 consulta o modificador diretamente pela função nativa do jogo. O usuário
 confirmou duas produções de 5 poções da receita 2, ambas registradas com bônus
 nativo 2. O resultado corresponde à produção manual observada no mesmo save.
-As outras 30 receitas foram mapeadas a partir dos dados dessa montagem, mas
-ainda não foram testadas uma a uma dentro do jogo.
+O usuário relatou que as outras receitas originais testadas funcionam. A receita
+13 (Saviour Schnapps) inicialmente falhou na criação. A versão 0.1.5 cria
+separadamente cada unidade de produtos não divisíveis; no teste dentro do jogo,
+a receita 13 criou 5 poções de qualidade 4 com bônus nativo 2. Receitas
+adicionadas por outros mods seguem
+o preparo manual, pois não constam da tabela gerada para esta montagem.
 
 Ao usar **Prepare** no livro da mesa de alquimia, o mod lê a receita aberta,
 retira os ingredientes do inventário e adiciona imediatamente **poções da

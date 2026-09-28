@@ -148,12 +148,13 @@ static int script_integer(void* script, void** table, const char* name, int fall
 
 /* Status: 0 = insufficient inventory (allow vanilla), positive = amount created,
  * -1 = attempted but failed (suppress vanilla to prevent double spending). */
-static int brew(const Recipe* recipe, uint32_t bonus)
+static int brew(const Recipe* recipe, uint32_t bonus, int* failure_stage)
 {
     char lua[4096];
     size_t used = 0;
     if (!append(lua, sizeof(lua), &used,
         "InstantPrepareStatus=-1\n"
+        "InstantPrepareFailureStage=0\n"
         "local inventory=player and player.inventory\n"
         "if not inventory then return end\n"
         "local requirements={")) return 0;
@@ -166,6 +167,7 @@ static int brew(const Recipe* recipe, uint32_t bonus)
         "}\n"
         "local product='%s'\n"
         "local amount=%u\n"
+        "local separate=%s\n"
         "local planned={}\n"
         "for _,row in ipairs(requirements) do\n"
         "  local fresh=inventory:GetCountOfClass(row[1])\n"
@@ -179,9 +181,14 @@ static int brew(const Recipe* recipe, uint32_t bonus)
         "local oldProduct=inventory:GetCountOfClass(product)\n"
         "local removed={}\n"
         "local ok,problem=pcall(function()\n"
-        "  inventory:CreateItem(product,1,amount)\n"
+        "  InstantPrepareFailureStage=1\n"
+        "  if separate then\n"
+        "    for i=1,amount do inventory:CreateItem(product,1,1) end\n"
+        "  else inventory:CreateItem(product,1,amount) end\n"
+        "  InstantPrepareFailureStage=2\n"
         "  assert(inventory:GetCountOfClass(product)>=oldProduct+amount,'product creation failed')\n"
         "  for _,row in ipairs(planned) do\n"
+        "    InstantPrepareFailureStage=3\n"
         "    local count=inventory:DeleteItemOfClass(row[1],row[2])\n"
         "    if count and count>0 then removed[#removed+1]={row[1],count} end\n"
         "    assert(count==row[2],'ingredient removal failed')\n"
@@ -194,15 +201,18 @@ static int brew(const Recipe* recipe, uint32_t bonus)
         "  InstantPrepareStatus=-1\n"
         "  return\n"
         "end\n"
+        "InstantPrepareFailureStage=0\n"
         "InstantPrepareStatus=amount\n"
         "if Game and Game.ShowItemsTransfer then pcall(Game.ShowItemsTransfer,product,amount) end\n",
-        recipe->product, recipe->max_yield + bonus)) return 0;
+        recipe->product, recipe->max_yield + bonus,
+        recipe->separate_items ? "true" : "false")) return 0;
 
     void* script = *(void**)(g_game + RVA_GLOBAL_ENV + 0x28);
     if (!script) return 0;
     void** table = *(void***)script;
     if (!((ExecuteBufferFn)table[6])(script, lua, used, "InstantPrepare", NULL))
         return -1;
+    *failure_stage = script_integer(script, table, "InstantPrepareFailureStage", -1);
     return script_integer(script, table, "InstantPrepareStatus", -1);
 }
 
@@ -228,8 +238,9 @@ static void __fastcall hook_trigger(void* actions, void* action)
             if (recipe) {
                 g_inside_trigger = 1;
                 uint32_t bonus = 0;
+                int failure_stage = -1;
                 int has_bonus = alchemy_yield_bonus(g_session, &bonus);
-                int status = has_bonus ? brew(recipe, bonus) : 0;
+                int status = has_bonus ? brew(recipe, bonus, &failure_stage) : 0;
                 g_inside_trigger = 0;
                 if (!has_bonus)
                     log_line("Recipe %u: native yield unavailable; vanilla action used", recipe->id);
@@ -239,7 +250,8 @@ static void __fastcall hook_trigger(void* actions, void* action)
                         log_line("Recipe %u: created %d quality-4 potions (native yield bonus %u)",
                                  recipe->id, status, bonus);
                     } else {
-                        log_line("Recipe %u: transaction failed; vanilla action suppressed", recipe->id);
+                        log_line("Recipe %u: transaction failed at stage %d; vanilla action suppressed",
+                                 recipe->id, failure_stage);
                     }
                     /* TriggerAction normally destroys its by-value CryString argument. */
                     ((ReleaseStringFn)(g_game + RVA_RELEASE_STRING))((uint8_t*)name - 12);
