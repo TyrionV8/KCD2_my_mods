@@ -19,6 +19,9 @@
 #define RVA_RELEASE_STRING      0x004FD898
 #define RVA_FRAMEWORK_POINTER   0x0549D328
 #define RVA_GLOBAL_ENV          0x0492D800
+#define RVA_PERK_STAT_MODIFIER  0x00649F1C
+#define PERK_STAT_ALCHEMY_YIELD 73
+#define SOUL_PERK_STAT_SLOT     (0x310 / sizeof(void*))
 
 #define EXPECTED_PE_TIMESTAMP   0x6A350E20
 #define EXPECTED_IMAGE_SIZE     0x05B2D000
@@ -31,6 +34,7 @@ typedef void (__fastcall *ClearIngredientsFn)(void*);
 typedef void (__fastcall *ReleaseStringFn)(void*);
 typedef uint8_t (__fastcall *ExecuteBufferFn)(void*, const char*, size_t, const char*, void*);
 typedef uint8_t (__fastcall *GetGlobalAnyFn)(void*, const char*, void*);
+typedef float (__fastcall *GetPerkStatModifierFn)(void*, uint32_t, float, void*);
 
 typedef struct { uint32_t type; uint32_t pad; float number; uint8_t rest[12]; } ScriptNumber;
 _Static_assert(sizeof(void*) == 8, "x64 build required");
@@ -111,14 +115,45 @@ static const Recipe* open_recipe(void* session)
     return recipe_by_id(*(const uint32_t*)(bytes + 0x130));
 }
 
-/* Status: 0 = insufficient inventory (allow vanilla), 1 = created,
- * 2 = attempted but failed (suppress vanilla to prevent double spending). */
-static int brew(const Recipe* recipe)
+/* Read the active alchemy-yield perk statistic from the minigame owner's soul.
+ * Lua's HasPerk handles only script perks; Lua's GetDerivedStat uses a different
+ * statistic domain. Both miss the native Secrets of Matter modifier. */
+static int alchemy_yield_bonus(void* session, uint32_t* bonus)
+{
+    void* actor = *(void**)((uint8_t*)session + 0x18);
+    if (!actor) return 0;
+    void* soul = *(void**)((uint8_t*)actor + 0x668);
+    if (!soul) return 0;
+    void** vtable = *(void***)soul;
+    if (!vtable || vtable[SOUL_PERK_STAT_SLOT] != g_game + RVA_PERK_STAT_MODIFIER)
+        return 0;
+
+    float value = ((GetPerkStatModifierFn)vtable[SOUL_PERK_STAT_SLOT])(
+        soul, PERK_STAT_ALCHEMY_YIELD, 0.0f, NULL);
+    if (!(value >= 0.0f && value <= 100.0f)) return 0;
+    uint32_t whole = (uint32_t)value;
+    if (value != (float)whole) return 0;
+    *bonus = whole;
+    return 1;
+}
+
+static int script_integer(void* script, void** table, const char* name, int fallback)
+{
+    ScriptNumber value = {0};
+    value.type = 4; /* ANY_TNUMBER */
+    if (!((GetGlobalAnyFn)table[32])(script, name, &value) || value.type != 4)
+        return fallback;
+    return (int)value.number;
+}
+
+/* Status: 0 = insufficient inventory (allow vanilla), positive = amount created,
+ * -1 = attempted but failed (suppress vanilla to prevent double spending). */
+static int brew(const Recipe* recipe, uint32_t bonus)
 {
     char lua[4096];
     size_t used = 0;
     if (!append(lua, sizeof(lua), &used,
-        "InstantPrepareStatus=2\n"
+        "InstantPrepareStatus=-1\n"
         "local inventory=player and player.inventory\n"
         "if not inventory then return end\n"
         "local requirements={")) return 0;
@@ -130,6 +165,7 @@ static int brew(const Recipe* recipe)
     if (!append(lua, sizeof(lua), &used,
         "}\n"
         "local product='%s'\n"
+        "local amount=%u\n"
         "local planned={}\n"
         "for _,row in ipairs(requirements) do\n"
         "  local fresh=inventory:GetCountOfClass(row[1])\n"
@@ -143,8 +179,8 @@ static int brew(const Recipe* recipe)
         "local oldProduct=inventory:GetCountOfClass(product)\n"
         "local removed={}\n"
         "local ok,problem=pcall(function()\n"
-        "  inventory:CreateItem(product,1,1)\n"
-        "  assert(inventory:GetCountOfClass(product)>=oldProduct+1,'product creation failed')\n"
+        "  inventory:CreateItem(product,1,amount)\n"
+        "  assert(inventory:GetCountOfClass(product)>=oldProduct+amount,'product creation failed')\n"
         "  for _,row in ipairs(planned) do\n"
         "    local count=inventory:DeleteItemOfClass(row[1],row[2])\n"
         "    if count and count>0 then removed[#removed+1]={row[1],count} end\n"
@@ -155,23 +191,19 @@ static int brew(const Recipe* recipe)
         "  for _,row in ipairs(removed) do pcall(inventory.CreateItem,inventory,row[1],1,row[2]) end\n"
         "  local excess=inventory:GetCountOfClass(product)-oldProduct\n"
         "  if excess>0 then pcall(inventory.DeleteItemOfClass,inventory,product,excess) end\n"
-        "  InstantPrepareStatus=2\n"
+        "  InstantPrepareStatus=-1\n"
         "  return\n"
         "end\n"
-        "InstantPrepareStatus=1\n"
-        "if Game and Game.ShowItemsTransfer then pcall(Game.ShowItemsTransfer,product,1) end\n",
-        recipe->product)) return 0;
+        "InstantPrepareStatus=amount\n"
+        "if Game and Game.ShowItemsTransfer then pcall(Game.ShowItemsTransfer,product,amount) end\n",
+        recipe->product, recipe->max_yield + bonus)) return 0;
 
     void* script = *(void**)(g_game + RVA_GLOBAL_ENV + 0x28);
     if (!script) return 0;
     void** table = *(void***)script;
     if (!((ExecuteBufferFn)table[6])(script, lua, used, "InstantPrepare", NULL))
-        return 2;
-    ScriptNumber status = {0};
-    status.type = 4; /* ANY_TNUMBER */
-    if (!((GetGlobalAnyFn)table[32])(script, "InstantPrepareStatus", &status) ||
-        status.type != 4) return 2;
-    return (int)status.number;
+        return -1;
+    return script_integer(script, table, "InstantPrepareStatus", -1);
 }
 
 static char __fastcall hook_start(void* session, uint32_t table_id)
@@ -195,12 +227,17 @@ static void __fastcall hook_trigger(void* actions, void* action)
             const Recipe* recipe = open_recipe(g_session);
             if (recipe) {
                 g_inside_trigger = 1;
-                int status = brew(recipe);
+                uint32_t bonus = 0;
+                int has_bonus = alchemy_yield_bonus(g_session, &bonus);
+                int status = has_bonus ? brew(recipe, bonus) : 0;
                 g_inside_trigger = 0;
-                if (status == 1 || status == 2) {
-                    if (status == 1) {
+                if (!has_bonus)
+                    log_line("Recipe %u: native yield unavailable; vanilla action used", recipe->id);
+                if (status != 0) {
+                    if (status > 0) {
                         ((ClearIngredientsFn)(g_game + RVA_CLEAR_INGREDIENTS))(g_session);
-                        log_line("Recipe %u: created one quality-4 potion", recipe->id);
+                        log_line("Recipe %u: created %d quality-4 potions (native yield bonus %u)",
+                                 recipe->id, status, bonus);
                     } else {
                         log_line("Recipe %u: transaction failed; vanilla action suppressed", recipe->id);
                     }

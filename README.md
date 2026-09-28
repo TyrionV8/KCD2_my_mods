@@ -6,10 +6,11 @@ Este repositório reúne mods, pacotes de instalação e anotações de desenvol
 
 | Projeto | Estado | Instalação |
 | --- | --- | --- |
-| [Instant Prepare](mods/instant-prepare/README.md) | Testado no Steam, montagem 15693, Linux/Proton; receita 2 confirmada | [Pacote de instalação](mods/instant-prepare/dist/InstantPrepare-15693-mod.zip) extraído na raiz do jogo |
+| [Instant Prepare](mods/instant-prepare/README.md) | Versão 0.1.4 testada no Steam, montagem 15693, Linux/Proton; a receita 2 criou 5 poções com bônus ativo 2 | [Pacote de instalação](mods/instant-prepare/dist/InstantPrepare-15693-mod.zip) extraído na raiz do jogo |
 
 **Instant Prepare** substitui a opção **Prepare** da mesa de alquimia: desconta
-os ingredientes e entrega diretamente uma poção de qualidade 4. O
+os ingredientes e entrega diretamente poções de qualidade 4. A quantidade usa
+o rendimento da receita e os talentos de alquimia do personagem. O
 [README do projeto](mods/instant-prepare/README.md) explica instalação,
 funcionamento, compatibilidade, limites, recompilação e licenças.
 

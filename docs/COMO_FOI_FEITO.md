@@ -117,7 +117,7 @@ rotina Lua que, para a receita escolhida:
 
 1. conta a versão fresca e, se cadastrada, a versão seca de cada ingrediente;
 2. planeja quanto retirar de cada variante, antes de mudar o inventário;
-3. cria uma unidade do produto de qualidade 4;
+3. cria o produto de qualidade 4;
 4. retira exatamente as quantidades planejadas;
 5. informa sucesso ou falha para a extensão.
 
@@ -132,6 +132,36 @@ Por isso o teste em um save separado continua importante.
 Ao concluir com sucesso, o código também chama a função interna que limpa os
 espaços de ingredientes da mesa e escreve uma linha em `InstantPrepare.log`.
 O registro facilita distinguir “o arquivo carregou” de “uma receita foi criada”.
+
+### Correção posterior do rendimento
+
+O primeiro teste revelou que a versão inicial criava sempre uma unidade. Na
+versão 0.1.1, o gerador passou a ler `MaxYield` do produto de qualidade 4 em
+`AlchemyRecipe.xml`. A rotina Lua consultava `player.soul:HasPerk` para os
+talentos **Secrets of Matter I** e **Secrets of Matter II**. O teste no jogo
+entregou 3 unidades da receita 2 apesar de **Secrets of Matter II** estar
+adquirido; portanto, essa consulta não refletiu o bônus nesse cenário.
+
+Na versão 0.1.2, a rotina passou a consultar `player.soul:GetDerivedStat('ala')`,
+o bônus de rendimento usado pelos efeitos dos talentos. O teste no jogo
+retornou zero mesmo com o talento II adquirido. A tabela
+`buff__perk.xml` da montagem analisada registra `ala+1` para o primeiro talento
+e `ala+2` para o segundo. A receita 2 tem rendimento básico 3; com apenas o
+segundo talento, o resultado esperado é 5. A versão 0.1.3 compara também
+`g_localActor.soul`, experimenta as consultas por identificador e nome, e
+registra nível de alquimia, bônus e resultado de talento de cada referência.
+O teste confirmou novamente 3 unidades: bônus zero nas consultas por script,
+mesmo com o talento II na tela do personagem e cinco unidades na produção manual.
+
+A versão 0.1.4 usa a função nativa `C_Soul::GetPerkStatModifier` para ler o
+modificador `ala` (identificador 73) do personagem dono da mesa. O código
+confere se a função encontrada na tabela virtual do personagem aponta para o
+endereço verificado na biblioteca local do jogo. Se não encontrar o personagem,
+a função ou um valor inteiro plausível, deixa a ação original **Prepare** seguir.
+Essa versão compilou e passou nos testes simulados de quantidade e inventário.
+No teste dentro do jogo, a receita 2 criou 5 poções de qualidade 4 duas vezes;
+o registro mostrou `native yield bonus 2` nas duas produções. Isso confirma
+essa leitura nativa para o talento **Secrets of Matter II** no save testado.
 
 ## 6. Compilar uma extensão Windows no Linux
 

@@ -54,18 +54,22 @@ com inteligência artificial.
 1. Entre na sua conta Nexus Mods e, na página do jogo, use a opção de adicionar
    um mod. O nome exato do botão pode mudar com a interface.
 2. Use um título claro, por exemplo **Instant Prepare — One-Click Best Quality
-   Alchemy (Steam build 15693)**. Versão sugerida: `0.1.0`. Categoria sugerida:
+   Alchemy (Steam build 15693)**. Versão testada para a receita 2: `0.1.4`. Categoria sugerida:
    jogabilidade ou alquimia, conforme as opções disponíveis.
 3. Envie `InstantPrepare-15693-mod.zip` como **arquivo principal**. Se desejar,
    envie `InstantPrepare-15693-source.zip` como arquivo adicional de código.
 4. Na descrição, explique: a ação **Prepare** consome ingredientes e produz
-   uma poção de qualidade 4 diretamente; há 31 receitas mapeadas; só a receita
-   2 foi testada no jogo; instalação manual na raiz; `dinput8.dll` não deve
+   poções de qualidade 4 diretamente, conforme o rendimento da receita e o
+   bônus ativo do personagem; há 31 receitas mapeadas; as versões 0.1.1 a 0.1.3
+   ainda produziam apenas 3 com Secrets of Matter II, e a versão 0.1.4 produziu
+   5 em duas tentativas da receita 2;
+   instalação manual na raiz; `dinput8.dll` não deve
    substituir um carregador já existente sem análise; no Proton é preciso
    `WINEDLLOVERRIDES="dinput8=n,b" %command%`; Windows ainda não foi testado.
 5. Liste os limites: compatibilidade exclusiva com a montagem Steam 15693;
    experiência, estatísticas, conquistas e progresso de missões da alquimia
-   podem não ser contabilizados; uma poção por uso.
+   podem não ser contabilizados; modificações que não afetem o bônus de
+   rendimento `ala` não são incluídas.
 6. Informe créditos e licenças: código próprio sob GNU General Public License
    versão 3; MinHook e Ultimate ASI Loader com as licenças incluídas no pacote.
    A implementação deste mod foi majoritariamente produzida com auxílio de
@@ -81,9 +85,11 @@ com inteligência artificial.
 Texto curto sugerido para a descrição:
 
 > On Steam build 15693, using Prepare at an alchemy bench directly consumes the
-> recipe ingredients and grants one quality-4 potion. Supports 31 mapped base
-> recipes. Manual game-root installation required; tested on Linux/Proton with
-> recipe 2. Windows and other game builds are untested. Normal alchemy
+> recipe ingredients and grants quality-4 potions using the recipe's maximum
+> yield, plus the character's active alchemy yield bonus. Supports 31 mapped
+> base recipes. Manual game-root installation required. Earlier versions produced
+> the base yield despite Secrets of Matter II; this correction still needs an
+> in-game test. Windows and other game builds are untested. Normal alchemy
 > experience and quest/stat events may not fire.
 
 Uma imagem de capa pode mostrar o livro aberto e a poção no inventário. Use uma

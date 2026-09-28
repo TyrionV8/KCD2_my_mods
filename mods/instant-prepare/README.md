@@ -1,15 +1,28 @@
 # Instant Prepare — Kingdom Come: Deliverance II
 
-**Estado:** versão 0.1.0, testada no jogo Steam de montagem **15693** em
+**Estado:** a versão 0.1.0 foi testada no jogo Steam de montagem **15693** em
 Linux com Proton em 28/09/2026. A receita 2 produziu uma poção de qualidade 4;
-o registro mostrou `Recipe 2: created one quality-4 potion`. As outras 30
-receitas foram mapeadas a partir dos dados dessa montagem, mas ainda não foram
-testadas uma a uma dentro do jogo.
+o registro mostrou `Recipe 2: created one quality-4 potion`. A versão 0.1.1
+passou a usar o rendimento básico da receita, mas o teste com **Secrets of
+Matter II** entregou 3, quando deveria entregar 5. A versão 0.1.2 também
+entregou 3: o bônus consultado no script apareceu como zero. A versão 0.1.3
+também entregou 3, apesar do talento aparecer na tela do personagem. A versão
+0.1.4 consulta o modificador diretamente pela função nativa do jogo. O usuário
+confirmou duas produções de 5 poções da receita 2, ambas registradas com bônus
+nativo 2. O resultado corresponde à produção manual observada no mesmo save.
+As outras 30 receitas foram mapeadas a partir dos dados dessa montagem, mas
+ainda não foram testadas uma a uma dentro do jogo.
 
 Ao usar **Prepare** no livro da mesa de alquimia, o mod lê a receita aberta,
-retira os ingredientes do inventário e adiciona imediatamente **uma poção da
-maior qualidade cadastrada para essa receita (nível 4)**. Os ingredientes não
-são colocados sobre a mesa. O mod pode usar a variante seca de uma erva quando
+retira os ingredientes do inventário e adiciona imediatamente **poções da
+maior qualidade cadastrada para essa receita (nível 4)**. A quantidade parte
+do `MaxYield` dessa qualidade nos dados do jogo e soma o bônus efetivo de
+rendimento da alquimia. **Secrets of Matter I** acrescenta +1 e **Secrets of
+Matter II** acrescenta +2. Por exemplo,
+uma receita com rendimento básico 3 entrega 5 unidades com o segundo talento
+e sem o primeiro; com ambos, entrega 6. O nível de alquimia permite adquirir
+esses talentos, mas a quantidade depende do bônus efetivo do personagem. Os
+ingredientes não são colocados sobre a mesa. O mod pode usar a variante seca de uma erva quando
 ela existir. Se faltarem ingredientes ou a receita não estiver entre as 31
 mapeadas, o jogo executa a ação original.
 
@@ -20,7 +33,7 @@ mapeadas, o jogo executa a ação original.
 | `dist/InstantPrepare-15693-mod.zip` | Pacote de instalação manual, extraído na raiz do jogo |
 | `dist/InstantPrepare-15693-source.zip` | Código-fonte e licenças para distribuição |
 | `src/instant_prepare.c` | Extensão nativa que intercepta a ação Prepare |
-| `src/recipes_generated.h` | Identificadores das 31 receitas e poções de qualidade 4 |
+| `src/recipes_generated.h` | Identificadores das 31 receitas, poções de qualidade 4 e rendimento básico |
 | `tools/generate_recipes.py` | Gera a tabela de receitas a partir de `Data/Tables.pak` |
 | `build-linux.sh` | Compila a extensão Windows de 64 bits no Linux |
 | `tools/package.py` | Recria e confere os dois arquivos compactados |
@@ -80,9 +93,12 @@ modificá-las em memória.
 - **Somente a montagem Steam 15693 foi validada.** Atualizações do jogo podem
   mudar endereços internos. Não anuncie compatibilidade com outra montagem sem
   conferir os endereços, recompilar e testar no jogo.
-- O item é criado diretamente no inventário. Experiência de alquimia,
+- Os itens são criados diretamente no inventário. Experiência de alquimia,
   estatísticas, conquistas e progresso de missões ligados à fabricação normal
-  podem não ser concedidos. Cada uso gera **uma** poção.
+  podem não ser concedidos. A quantidade considera o rendimento básico e o
+  modificador ativo de rendimento `ala` do personagem. Essa leitura nativa foi
+  confirmada para a receita 2 com **Secrets of Matter II**; modificações que não alterem esse bônus não
+  são incluídas.
 - Em falha na transação de inventário, o mod tenta desfazer as alterações e
   registra o erro. Como a interface interna do jogo não oferece uma transação
   atômica garantida, teste primeiro em um salvamento descartável.
@@ -105,10 +121,13 @@ O código instala uma interceptação (*hook*, desvio temporário de uma funçã
 memória) na ação interna `read_select` do contexto `alchemy_reading`. Ele lê a
 receita aberta, procura seu identificador na tabela gerada e monta uma pequena
 rotina Lua, linguagem de script disponível no jogo. A rotina confere as
-quantidades frescas/secas, cria a poção de nível 4, desconta os ingredientes e
+quantidades frescas/secas e cria a quantidade de
+poções de nível 4 correspondente, desconta os ingredientes e
 tenta desfazer a operação se algo falhar. A ação original **Prepare** só é
 suprimida quando a transação foi tentada; com ingredientes insuficientes, ela
-continua funcionando. O guia de construção está em `docs/COMO_FOI_FEITO.md` na
+continua funcionando. O código nativo consulta o modificador ativo de rendimento
+no personagem antes de executar essa rotina. Se não conseguir lê-lo com segurança,
+deixa a ação original do jogo funcionar. O guia de construção está em `docs/COMO_FOI_FEITO.md` na
 raiz do repositório.
 
 ## Recompilação no Linux
