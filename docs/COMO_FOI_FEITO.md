@@ -14,7 +14,8 @@ O usuário confirmou que, ao usar **Prepare**, a poção apareceu diretamente e 
 ingredientes não foram separados na mesa. Testes posteriores confirmaram o
 rendimento de 5 unidades na receita 2 e, após correção dos itens não divisíveis,
 na receita 13. O usuário também relatou funcionamento das outras receitas
-originais testadas; receitas adicionadas por mods permanecem no preparo manual.
+originais testadas. A versão 0.1.6 incluiu receitas do LDPotions, e o usuário
+confirmou que o preparo imediato funcionou com esse mod.
 
 ## 1. Traduzir o pedido em uma sequência verificável
 
@@ -172,6 +173,18 @@ produtos não divisíveis separadamente. A rotina também registra a etapa da
 falha para facilitar o diagnóstico caso a mudança não resolva o problema.
 Essa alteração passou na simulação de inventário. No teste dentro do jogo, a
 receita 13 criou 5 poções de qualidade 4 com bônus nativo 2.
+
+### Receitas adicionadas pelo LDPotions
+
+O usuário relatou que receitas de mods ainda seguiam o preparo manual. A tabela
+gerada até a versão 0.1.5 continha somente as 31 receitas do jogo. Entre os
+pacotes instalados, `LDPotions.pak` contém `AlchemyRecipe__ldpotions.xml` com
+16 receitas e `item__ldpotions.xml` com os produtos. Os 16 livros de receita
+usam os mesmos identificadores, de 157 a 173, exceto 167. A versão 0.1.6
+permite passar esse pacote ao gerador por `--recipe-mod` e resulta em 47 receitas.
+O pacote do LDPotions permanece uma dependência separada. O usuário confirmou
+o funcionamento da versão 0.1.6 com receitas desse mod dentro do jogo, sem
+fornecer um registro de teste individual das 16 receitas.
 
 ## 6. Compilar uma extensão Windows no Linux
 

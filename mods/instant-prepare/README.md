@@ -13,9 +13,17 @@ nativo 2. O resultado corresponde à produção manual observada no mesmo save.
 O usuário relatou que as outras receitas originais testadas funcionam. A receita
 13 (Saviour Schnapps) inicialmente falhou na criação. A versão 0.1.5 cria
 separadamente cada unidade de produtos não divisíveis; no teste dentro do jogo,
-a receita 13 criou 5 poções de qualidade 4 com bônus nativo 2. Receitas
-adicionadas por outros mods seguem
-o preparo manual, pois não constam da tabela gerada para esta montagem.
+a receita 13 criou 5 poções de qualidade 4 com bônus nativo 2. Até essa versão,
+as receitas adicionadas por mods seguiam o preparo manual.
+
+**Versão 0.1.6:** a tabela também inclui as 16 receitas do mod
+**LDPotions 1.1.1**, de **lecdabster**, instalado pelo Steam Workshop com o
+identificador 3444029845. O arquivo desse mod forneceu os identificadores dos
+produtos e as quantidades; seus arquivos não são redistribuídos aqui. O
+LDPotions precisa continuar instalado para que essas receitas existam no jogo.
+O usuário confirmou que o preparo imediato funcionou com receitas desse mod;
+não há registro de teste individual das 16 receitas. Outros mods de alquimia
+não entram automaticamente na tabela.
 
 Ao usar **Prepare** no livro da mesa de alquimia, o mod lê a receita aberta,
 retira os ingredientes do inventário e adiciona imediatamente **poções da
@@ -37,7 +45,7 @@ mapeadas, o jogo executa a ação original.
 | `dist/InstantPrepare-15693-mod.zip` | Pacote de instalação manual, extraído na raiz do jogo |
 | `dist/InstantPrepare-15693-source.zip` | Código-fonte e licenças para distribuição |
 | `src/instant_prepare.c` | Extensão nativa que intercepta a ação Prepare |
-| `src/recipes_generated.h` | Identificadores das 31 receitas, poções de qualidade 4 e rendimento básico |
+| `src/recipes_generated.h` | Identificadores de 31 receitas originais e 16 do LDPotions, produtos de qualidade 4 e rendimento básico |
 | `tools/generate_recipes.py` | Gera a tabela de receitas a partir de `Data/Tables.pak` |
 | `build-linux.sh` | Compila a extensão Windows de 64 bits no Linux |
 | `tools/package.py` | Recria e confere os dois arquivos compactados |
@@ -86,7 +94,7 @@ e [MinHook](https://github.com/TsudaKageyu/minhook) são projetos independentes.
    de ingredientes separados sobre a mesa.
 
 O registro textual `InstantPrepare.log` aparece ao lado de `InstantPrepare.asi`.
-Na montagem testada, ele começa com `Loaded for Steam assembly 15693 (31 recipes)`
+Nesta versão, a linha esperada é `Loaded for Steam assembly 15693 (47 recipes)`
 e registra cada receita criada. Se aparecer `Unsupported WHGame.dll build`, a
 versão do jogo mudou e a extensão não instala suas interceptações. Ela verifica
 o cabeçalho da biblioteca do jogo e os bytes iniciais das funções antes de
@@ -154,6 +162,19 @@ esperado antes de embalar. O script `install-linux.sh` instala somente quando
 o `WHGame.dll` local corresponde exatamente à montagem usada no desenvolvimento
 e quando os nomes de destino ainda não existem; é uma conveniência para este
 ambiente, não um instalador genérico para qualquer versão do jogo.
+
+Para regenerar a tabela com o LDPotions instalado, execute nesta pasta:
+
+```bash
+# Lê as receitas originais e as 16 receitas do pacote do LDPotions instalado.
+python3 tools/generate_recipes.py \
+  /home/davi/.steam/debian-installation/steamapps/common/KingdomComeDeliverance2/Data/Tables.pak \
+  src/recipes_generated.h \
+  --recipe-mod /home/davi/.steam/debian-installation/steamapps/workshop/content/1771300/3444029845/Data/LDPotions.pak
+```
+
+`--recipe-mod` acrescenta um pacote de receitas ao gerador. Depois de gerar a
+tabela, recompile e recrie os arquivos compactados com os dois comandos acima.
 
 ## Código-fonte, créditos e licença
 
